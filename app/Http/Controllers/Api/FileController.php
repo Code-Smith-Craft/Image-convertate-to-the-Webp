@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Image\ImageStoreRequest;
 use App\Services\FileService;
 use Illuminate\Http\Request;
 
@@ -26,16 +27,22 @@ class FileController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ImageStoreRequest $request)
     {
         try {
-
-        }catch (\Throwable $throwable){
+            $response = $this->file_service->createFunction($request);
             return response()->json([
-                "error" => "Xatolik yuz berdi: " .$throwable->getMessage()
+                "success" => true,
+                "message" => "Harakat muvofaqiyatli bajarildi!",
+                "result" => $response
             ]);
+        } catch (\Throwable $throwable) {
+            return response()->json([
+                "error" => "Xatolik yuz berdi: " . $throwable->getMessage()
+            ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.
