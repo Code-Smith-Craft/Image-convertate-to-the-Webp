@@ -10,24 +10,25 @@ class FileService
 {
     public function createFunction($path,$image)
     {
-        if ($image->hasFile('file')) {
-            $file = $image->file('file');
-
-            $driver = config('image.driver', 'gd');
-            $manager = new ImageManager(['driver' => $driver]);
-            $img = $manager->make($file->getPathname());
-
-            // Faylni WebP formatida kodlaymiz
-            $img->encode('webp', 90);
-
-            // Fayl yo'lini yaratamiz
-            $file_path = Carbon::now()->format('d-m-Y');
-            $filePath = $path . '/' . (string)$file_path . '/' . time() . uniqid() . '-' . $file->getClientOriginalName();
-
-
-
-        } else {
-            throw new \Exception('Fayl topilmadi.');
+        try {
+            if ($image->hasFile('file')) {
+                $file = $image->file('file');
+                $driver = config('image.driver', 'gd');
+                $manager = new ImageManager(['driver' => $driver]);
+                $img = $manager->make($file->getPathname());
+                $img->encode('webp', 90);
+                $file_path = Carbon::now()->format('d-m-Y');
+                $filePath = $path . '/' . $file_path . '/' . time() . uniqid() . '-' . $file->getClientOriginalName();
+                Storage::disk('public')->put($filePath, (string) $img);
+                return [
+                    'file_path' => $filePath,
+                    'url' => Storage::url($filePath)
+                ];
+            } else {
+                throw new \Exception('Fayl topilmadi.');
+            }
+        }catch (\Throwable $throwable){
+            return $throwable;
         }
     }
 }
