@@ -19,7 +19,8 @@ class FileController extends Controller
     public function store(ImageStoreRequest $request)
     {
         try {
-            $response = $this->file_service->createFunction($request);
+            $path = "images";
+            $response = $this->file_service->createFunction($path,$request);
             return response()->json([
                 "success" => true,
                 "message" => "Harakat muvofaqiyatli bajarildi!",
