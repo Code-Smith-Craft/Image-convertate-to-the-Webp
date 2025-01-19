@@ -2,45 +2,30 @@
 
 namespace App\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
 
 class FileService
 {
-    public function createFunction($data)
+    public function createFunction($path,$image)
     {
-        if ($data->hasFile('file')) {
-            // Original rasmni saqlash (webp formatida)
-            $imagePath = $data->file('file')->store('images', 'public');
-            $image = \Intervention\Image\Facades\Image::make($data->file('file'));
-            $webpPath = 'images/' . pathinfo($imagePath, PATHINFO_FILENAME) . '.webp';
-            $image->encode('webp', 90); // 90% sifat bilan WebP formatga o'girish
-            Storage::disk('public')->put($webpPath, (string) $image);
-            $imageUrl = url('storage/' . $webpPath);
+        if ($image->hasFile('file')) {
+            $file = $image->file('file');
 
-            // Blur rasmni tayyorlash va siqish (webp formatida)
-            $blurredImage = $image->blur(10)->encode('webp', 100); // Sifatni 100% ga tushirish
-            $blurredPath = 'images/blurred_' . pathinfo($imagePath, PATHINFO_FILENAME) . '.webp';
-            Storage::disk('public')->put($blurredPath, (string) $blurredImage);
-            $blurredUrl = url('storage/' . $blurredPath);
-
-            // Rasm hajmini tekshirish va kerak bo'lsa o'lchamini o'zgartirish
             $driver = config('image.driver', 'gd');
             $manager = new ImageManager(['driver' => $driver]);
-            $img = $manager->make($data->file('file')->getPathname());
+            $img = $manager->make($file->getPathname());
 
-            $maxDimension = 1024;
-            if ($img->width() > $maxDimension || $img->height() > $maxDimension) {
-                $img->resize($maxDimension, $maxDimension, function ($constraint) {
-                    $constraint->aspectRatio();
-                });
-            }
+            // Faylni WebP formatida kodlaymiz
+            $img->encode('webp', 90);
 
-            // Ma'lumotlarni bazaga saqlash yoki boshqa maqsadlar uchun qaytarish
-            return [
-                'original_url' => $imageUrl,
-                'blurred_url' => $blurredUrl,
-            ];
+            // Fayl yo'lini yaratamiz
+            $file_path = Carbon::now()->format('d-m-Y');
+            $filePath = $path . '/' . (string)$file_path . '/' . time() . uniqid() . '-' . $file->getClientOriginalName();
+
+
+
         } else {
             throw new \Exception('Fayl topilmadi.');
         }
